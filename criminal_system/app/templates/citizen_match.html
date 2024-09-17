@@ -17,10 +17,26 @@
 
 <h2>Results:</h2>
 <ul>
-    {% for record in results %}
-        <li>{{ record }}</li> <!-- Display matched records -->
-    {% endfor %}
+    {% if results %}
+        {% for record in results %}
+            <li>
+                <strong>Name:</strong> {{ record.name }}<br>
+                <strong>Age:</strong> {{ record.age }}<br>
+                <strong>NIN:</strong> {{ record.nin }}<br>
+                <strong>Crime Committed:</strong> {{ record.crime_committed }}<br>
+                <strong>Residence Before Arrest:</strong> {{ record.residence_before_arrest }}<br>
+                {% if record.image %}
+                    <img src="{{ record.image.url }}" alt="{{ record.name }}" style="width:100px;height:auto;">
+                {% endif %}
+                <a href="{% url 'criminal_record_detail' record.pk %}">View Details</a>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li>No matches found.</li>
+    {% endif %}
 </ul>
+
+<a href="{% url 'criminal_record_list' %}">Back to List</a>
 
 </body>
 </html>
