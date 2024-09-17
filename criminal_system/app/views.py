@@ -1,20 +1,21 @@
 # app/views.py
-
-from django.shortcuts import render, get_object_or_404  # Import get_object_or_404
+import os  # Make sure to import os
+from django.shortcuts import render, get_object_or_404
 from .models import CriminalRecord
+from .forms import ImageUploadForm
+from deepface import DeepFace
 
 def criminal_record_list(request):
     records = CriminalRecord.objects.all()
     return render(request, 'criminal_record_list.html', {'records': records})
 
 def criminal_record_detail(request, pk):
-    record = get_object_or_404(CriminalRecord, pk=pk)  # Use the imported function here
+    record = get_object_or_404(CriminalRecord, pk=pk)
     return render(request, 'criminal_record_detail.html', {'record': record})
 
 def criminal_record_search(request):
     query = request.GET.get('q')
     if query:
-        # Filter records based on the query
         records = CriminalRecord.objects.filter(
             name__icontains=query
         ) | CriminalRecord.objects.filter(
@@ -26,3 +27,28 @@ def criminal_record_search(request):
         records = CriminalRecord.objects.none()  # No results if no query is provided
     
     return render(request, 'criminal_record_search.html', {'records': records, 'query': query})
+
+def citizen_match(request):
+    form = ImageUploadForm()
+    results = []
+
+    if request.method == 'POST':
+        form = ImageUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            uploaded_image = request.FILES['image']
+            uploaded_image_path = os.path.join('media', uploaded_image.name)
+
+            # Save the uploaded image temporarily
+            with open(uploaded_image_path, 'wb+') as destination:
+                for chunk in uploaded_image.chunks():
+                    destination.write(chunk)
+
+            # Use DeepFace to find matches in the database images
+            result = DeepFace.find(img_path=uploaded_image_path, db_path='media/criminal_images')  # Adjust path as necessary
+            
+            results = result  # Store results to display in template
+
+            # Clean up the uploaded file after processing
+            os.remove(uploaded_image_path)
+
+    return render(request, 'citizen_match.html', {'form': form, 'results': results})

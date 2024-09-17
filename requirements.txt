@@ -1,2 +1,6 @@
 Django
 Pillow
+face_recognition
+opencv-python
+deepface
+tf-keras

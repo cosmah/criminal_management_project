@@ -1,7 +1,6 @@
-from django import forms
-from .models import Book
+# app/forms.py
 
-class BookForm(forms.ModelForm):
-    class Meta:
-        model = Book
-        fields = ['title', 'author', 'published_date']
+from django import forms
+
+class ImageUploadForm(forms.Form):
+    image = forms.ImageField()

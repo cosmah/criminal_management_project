@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Criminal Records</title>
+</head>
+<body>
+
+<h1>Match Criminal Records by Image</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+<h2>Results:</h2>
+<ul>
+    {% for record in results %}
+        <li>{{ record }}</li> <!-- Display matched records -->
+    {% endfor %}
+</ul>
+
+</body>
+</html>
