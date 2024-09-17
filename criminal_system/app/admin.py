@@ -1,10 +1,9 @@
 # app/admin.py
 
 from django.contrib import admin
-from .models import Book
+from .models import CriminalRecord  # Change this line to import CriminalRecord
 
-@admin.register(Book)
-class BookAdmin(admin.ModelAdmin):
-    list_display = ('title', 'author', 'published_date')
-    search_fields = ('title', 'author')
-    # Add any other admin functionality you need
+@admin.register(CriminalRecord)
+class CriminalRecordAdmin(admin.ModelAdmin):
+    list_display = ('name', 'age', 'nin', 'crime_committed', 'residence_before_arrest')
+    search_fields = ('name', 'nin', 'crime_committed')

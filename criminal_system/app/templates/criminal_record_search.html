@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Search Criminal Records</title>
+</head>
+<body>
+<h1>Search Criminal Records</h1>
+<form method="get" action="{% url 'criminal_record_search' %}">
+    <input type="text" name="q" placeholder="Search by name, NIN, or crime" value="{{ query }}">
+    <button type="submit">Search</button>
+</form>
+
+<ul>
+    {% if records %}
+        {% for record in records %}
+            <li>
+                <strong>{{ record.name }}</strong>, Age: {{ record.age }}, NIN: {{ record.nin }}<br>
+                Crime Committed: {{ record.crime_committed }}<br>
+                Residence Before Arrest: {{ record.residence_before_arrest }}<br>
+                <img src="{{ record.image.url }}" alt="{{ record.name }}" style="width:100px;height:auto;">
+                <a href="{% url 'criminal_record_detail' record.pk %}">View Details</a>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li>No results found for "{{ query }}".</li>
+    {% endif %}
+</ul>
+
+<a href="{% url 'criminal_record_list' %}">Back to List</a>
+</body>
+</html>
