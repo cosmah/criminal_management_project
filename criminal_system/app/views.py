@@ -9,7 +9,6 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-
 def criminal_record_list(request):
     records = CriminalRecord.objects.all()
     return render(request, 'criminal_record_list.html', {'records': records})
@@ -33,7 +32,6 @@ def criminal_record_search(request):
     
     return render(request, 'criminal_record_search.html', {'records': records, 'query': query})
 
-
 def citizen_match(request):
     form = ImageUploadForm()
     results = []
@@ -50,17 +48,27 @@ def citizen_match(request):
                     for chunk in uploaded_image.chunks():
                         destination.write(chunk)
 
+                logger.info(f"Uploaded image saved at: {uploaded_image_path}")
+
                 # Use DeepFace to find matches in the database images
                 matches = DeepFace.find(img_path=uploaded_image_path, db_path='media/criminal_images')  # Adjust path as necessary
                 
+                logger.info(f"Matches found: {matches}")
+
                 # Check if any matches were found
                 if matches:
                     for match in matches:
                         matched_image_path = match['identity']  # Get the path of the matched image
+                        logger.info(f"Matched image path: {matched_image_path}")
                         # Get the corresponding CriminalRecord object based on the matched image path
                         record = CriminalRecord.objects.filter(image=matched_image_path).first()
                         if record:
                             results.append(record)  # Append the full record object
+                            logger.info(f"Record found: {record}")
+                        else:
+                            logger.info(f"No record found for matched image path: {matched_image_path}")
+                else:
+                    logger.info("No matches found by DeepFace.")
 
             except Exception as e:
                 logger.error(f"Error during facial recognition: {e}")
@@ -68,5 +76,6 @@ def citizen_match(request):
                 # Clean up the uploaded file after processing
                 if os.path.exists(uploaded_image_path):
                     os.remove(uploaded_image_path)
+                    logger.info(f"Uploaded image removed: {uploaded_image_path}")
 
     return render(request, 'citizen_match.html', {'form': form, 'results': results})
