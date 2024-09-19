@@ -363,7 +363,7 @@
                     );
 
                     const { latitude, longitude } = position.coords;
-                    const apiKey = API_KEY; // Replace with your actual API key
+                    const apiKey = 'AIzaSyAyxrRBzwuC30BCbnq2eHDQcRurWTUH0Lk'; // Replace with your actual API key
                     const response = await fetch(`https://maps.googleapis.com/maps/api/geocode/json?latlng=${latitude},${longitude}&key=${apiKey}`);
                     const data = await response.json();
 
