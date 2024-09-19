@@ -4,17 +4,63 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ record.name }}'s Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            text-align: center;
+            color: #3498db;
+            margin-bottom: 20px;
+        }
+
+        img {
+            width: 100%;
+            height: auto;
+            max-width: 300px;
+            margin: 20px auto;
+            display: block;
+            border-radius: 5px;
+        }
+
+        p {
+            margin-bottom: 15px;
+        }
+
+        strong {
+            color: #2c3e50;
+        }
+
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
 </head>
-<body>
+<body class="container">
+    <h1>{{ record.name }}</h1>
+    <img src="{{ record.image.url }}" alt="{{ record.name }}">
+    <p><strong>Age:</strong> {{ record.age }}</p>
+    <p><strong>NIN:</strong> {{ record.nin }}</p>
+    <p><strong>Crime Committed:</strong> {{ record.crime_committed }}</p>
+    <p><strong>Residence Before Arrest:</strong> {{ record.residence_before_arrest }}</p>
 
-<h1>{{ record.name }}</h1>
-<img src="{{ record.image.url }}" alt="{{ record.name }}" style="width:200px;height:auto;">
-<p><strong>Age:</strong> {{ record.age }}</p>
-<p><strong>NIN:</strong> {{ record.nin }}</p>
-<p><strong>Crime Committed:</strong> {{ record.crime_committed }}</p>
-<p><strong>Residence Before Arrest:</strong> {{ record.residence_before_arrest }}</p>
-
-<a href="{% url 'criminal_record_list' %}">Back to List</a>
-
+    <a href="{% url 'citizen_match' %}" class="back-link">Back to Search</a>
 </body>
 </html>

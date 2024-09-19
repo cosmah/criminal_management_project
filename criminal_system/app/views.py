@@ -8,6 +8,8 @@ from .models import CriminalRecord
 from .forms import ImageUploadForm
 from deepface import DeepFace
 import pandas as pd
+from django.shortcuts import render, get_object_or_404
+
 
 def citizen_match(request):
     form = ImageUploadForm()
