@@ -16,7 +16,12 @@
     </style>
 </head>
 <body>
-    <h1>Match Criminal Records by Image</h1>
+
+    <div class="header">
+        <h1>Match Criminal Records by Image</h1>
+        <h1>Location: <span id="user-location">Fetching location...</span></h1>
+    </div>
+
 
     <form method="post" enctype="multipart/form-data" id="match-form">
         {% csrf_token %}
@@ -69,6 +74,8 @@
         const captureButton = document.getElementById('capture-button');
         const capturedImage = document.getElementById('captured-image');
         const matchForm = document.getElementById('match-form');
+        const userLocation = document.getElementById('user-location'); // Define userLocation here
+
 
         let stream;
 
@@ -147,6 +154,25 @@
                 }, 'image/jpeg');
             }
         });
+
+        // Function to get user's location
+        function getUserLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    const latitude = position.coords.latitude;
+                    const longitude = position.coords.longitude;
+                    userLocation.textContent = `Latitude: ${latitude}, Longitude: ${longitude}`;
+                }, function(error) {
+                    userLocation.textContent = 'Unable to retrieve location';
+                    console.error("Error getting location:", error);
+                });
+            } else {
+                userLocation.textContent = 'Geolocation is not supported by this browser';
+            }
+        }
+
+        // Call the function to get user's location on page load
+        getUserLocation();
     </script>
 </body>
 </html>
