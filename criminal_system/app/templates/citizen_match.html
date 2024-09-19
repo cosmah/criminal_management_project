@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Match Criminal Records</title>
+</head>
+<body>
+
+<h1>Match Criminal Records by Image</h1>
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Search</button>
+</form>
+
+<h2>Results:</h2>
+<ul>
+    {% if results %}
+        {% for record in results %}
+            <li>
+                <strong>Name:</strong> {{ record.name }}<br>
+                <strong>Age:</strong> {{ record.age }}<br>
+                <strong>NIN:</strong> {{ record.nin }}<br>
+                <strong>Crime Committed:</strong> {{ record.crime_committed }}<br>
+                <strong>Residence Before Arrest:</strong> {{ record.residence_before_arrest }}<br>
+                {% if record.image %}
+                    <img src="{{ record.image.url }}" alt="{{ record.name }}" style="width:100px;height:auto;">
+                {% endif %}
+                <a href="{% url 'criminal_record_detail' record.pk %}">View Details</a>
+            </li>
+        {% endfor %}
+    {% else %}
+        <li>No matches found.</li>
+    {% endif %}
+</ul>
+
+<a href="{% url 'criminal_record_list' %}">Back to List</a>
+
+</body>
+</html>
