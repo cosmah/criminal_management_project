@@ -215,6 +215,7 @@
                 <div id="camera-section" style="display:none;">
                     <video id="camera-stream" autoplay></video>
                     <button type="button" id="capture-button">Capture Image</button>
+                    <button type="button" id="toggle-camera-button">Toggle Camera</button>
                     <canvas id="captured-image" style="display:none;"></canvas>
                 </div>
                 <button type="submit">Search</button>
@@ -232,8 +233,6 @@
                                 <img src="{{ record.image.url }}" alt="{{ record.name }}" class="result-image">
                             </figure>
                             {% endif %}
-
-
                         </div>
                         <div class="card-body">
                             <h3>{{ record.name }}</h3>
@@ -249,8 +248,6 @@
                 <li>No matches found.</li>
                 {% endif %}
             </ul>
-
-            <!-- <a href="{% url 'criminal_record_list' %}">Back to List</a> -->
         </div>
     </div>
 
@@ -260,12 +257,13 @@
         const cameraSection = document.getElementById('camera-section');
         const cameraStream = document.getElementById('camera-stream');
         const captureButton = document.getElementById('capture-button');
+        const toggleCameraButton = document.getElementById('toggle-camera-button');
         const capturedImage = document.getElementById('captured-image');
         const matchForm = document.getElementById('match-form');
-        //const userLocation = document.getElementById('user-location'); // Define userLocation here
-
+        const userLocation = document.getElementById('user-location');
 
         let stream;
+        let currentFacingMode = 'user'; // Default to front camera
 
         imageSource.addEventListener('change', function () {
             if (this.value === 'upload') {
@@ -275,13 +273,13 @@
             } else {
                 uploadSection.style.display = 'none';
                 cameraSection.style.display = 'block';
-                startCamera();
+                startCamera(currentFacingMode);
             }
         });
 
-        async function startCamera() {
+        async function startCamera(facingMode) {
             try {
-                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: facingMode } });
                 cameraStream.srcObject = stream;
             } catch (err) {
                 console.error("Error accessing the camera:", err);
@@ -300,7 +298,6 @@
             capturedImage.height = cameraStream.videoHeight;
             context.drawImage(cameraStream, 0, 0);
             capturedImage.toBlob(function (blob) {
-                // Here we are appending the blob to FormData
                 const formData = new FormData(matchForm);
                 formData.append('image', blob, 'captured_image.jpg');
 
@@ -321,10 +318,10 @@
 
         matchForm.addEventListener('submit', function (e) {
             if (imageSource.value === 'camera' && capturedImage.style.display !== 'none') {
-                e.preventDefault(); // Prevent default form submission
+                e.preventDefault();
                 capturedImage.toBlob(function (blob) {
                     const formData = new FormData(matchForm);
-                    formData.delete('image');  // Remove the file input if it exists
+                    formData.delete('image');
                     formData.append('image', blob, 'captured_image.jpg');
 
                     fetch(matchForm.action, {
@@ -343,11 +340,11 @@
             }
         });
 
-        let userLocation = document.getElementById('user-location');
-        let verifyButton = document.createElement('button');
-        verifyButton.textContent = 'Verify Location';
-        verifyButton.style.display = 'none';
-        userLocation.parentNode.insertBefore(verifyButton, userLocation.nextSibling);
+        toggleCameraButton.addEventListener('click', function () {
+            currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
+            stopCamera();
+            startCamera(currentFacingMode);
+        });
 
         async function getUserLocation(useHighAccuracy = false) {
             if (navigator.geolocation) {
@@ -370,7 +367,6 @@
                     if (data.status === 'OK') {
                         const address = data.results[0].formatted_address;
                         userLocation.textContent = address;
-                        verifyButton.style.display = 'inline';
                     } else {
                         throw new Error(data.status);
                     }
@@ -384,19 +380,6 @@
                 userLocation.textContent = 'Geolocation is not supported by this browser';
             }
         }
-
-        verifyButton.onclick = () => {
-            const currentLocation = userLocation.textContent;
-            const userInput = prompt(`Is this location correct?\n${currentLocation}\n\nIf not, please enter your correct location:`);
-
-            if (userInput !== null) {
-                if (userInput.trim() !== '') {
-                    userLocation.textContent = userInput;
-                } else {
-                    alert('Location confirmed as correct.');
-                }
-            }
-        };
 
         getUserLocation();
     </script>
