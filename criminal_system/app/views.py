@@ -1,7 +1,9 @@
 # app/views.py
 import os
+import base64
 from django.conf import settings
 from django.shortcuts import render
+from django.core.files.base import ContentFile
 from .models import CriminalRecord
 from .forms import ImageUploadForm
 from deepface import DeepFace
@@ -13,18 +15,25 @@ def citizen_match(request):
     
     if request.method == 'POST':
         form = ImageUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            uploaded_image = request.FILES['image']
-            uploaded_image_path = os.path.join(settings.MEDIA_ROOT, 'temp', uploaded_image.name)
+        if form.is_valid() or 'image' in request.FILES:
+            if 'image' in request.FILES:
+                # Handle uploaded file
+                image = request.FILES['image']
+            else:
+                # Handle base64 encoded image from camera
+                image_data = base64.b64decode(request.POST['image'].split(',')[1])
+                image = ContentFile(image_data, name='captured_image.jpg')
+
+            uploaded_image_path = os.path.join(settings.MEDIA_ROOT, 'temp', image.name)
             
             try:
                 os.makedirs(os.path.dirname(uploaded_image_path), exist_ok=True)
                 
                 with open(uploaded_image_path, 'wb+') as destination:
-                    for chunk in uploaded_image.chunks():
+                    for chunk in image.chunks():
                         destination.write(chunk)
                 
-                print(f"Uploaded image saved at: {uploaded_image_path}")
+                print(f"Image saved at: {uploaded_image_path}")
                 
                 db_path = os.path.join(settings.MEDIA_ROOT, 'criminal_images')
                 print(f"Searching for matches in: {db_path}")
