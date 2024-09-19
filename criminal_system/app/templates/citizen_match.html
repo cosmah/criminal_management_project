@@ -4,39 +4,149 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Match Criminal Records</title>
+    <style>
+        #camera-stream, #captured-image {
+            width: 320px;
+            height: 240px;
+            border: 1px solid black;
+        }
+        #camera-stream {
+            transform: scaleX(-1);
+        }
+    </style>
 </head>
 <body>
+    <h1>Match Criminal Records by Image</h1>
 
-<h1>Match Criminal Records by Image</h1>
+    <form method="post" enctype="multipart/form-data" id="match-form">
+        {% csrf_token %}
+        <div>
+            <label for="image-source">Choose image source:</label>
+            <select id="image-source" name="image_source">
+                <option value="upload">Upload Image</option>
+                <option value="camera">Use Camera</option>
+            </select>
+        </div>
+        <div id="upload-section">
+            {{ form.as_p }}
+        </div>
+        <div id="camera-section" style="display:none;">
+            <video id="camera-stream" autoplay></video>
+            <button type="button" id="capture-button">Capture Image</button>
+            <canvas id="captured-image" style="display:none;"></canvas>
+        </div>
+        <button type="submit">Search</button>
+    </form>
 
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Search</button>
-</form>
+    <h2>Results:</h2>
+    <ul>
+        {% if results %}
+            {% for record in results %}
+                <li>
+                    <strong>Name:</strong> {{ record.name }}<br>
+                    <strong>Age:</strong> {{ record.age }}<br>
+                    <strong>NIN:</strong> {{ record.nin }}<br>
+                    <strong>Crime Committed:</strong> {{ record.crime_committed }}<br>
+                    <strong>Residence Before Arrest:</strong> {{ record.residence_before_arrest }}<br>
+                    {% if record.image %}
+                        <img src="{{ record.image.url }}" alt="{{ record.name }}" style="width:100px;height:auto;">
+                    {% endif %}
+                    <a href="{% url 'criminal_record_detail' record.pk %}">View Details</a>
+                </li>
+            {% endfor %}
+        {% else %}
+            <li>No matches found.</li>
+        {% endif %}
+    </ul>
 
-<h2>Results:</h2>
-<ul>
-    {% if results %}
-        {% for record in results %}
-            <li>
-                <strong>Name:</strong> {{ record.name }}<br>
-                <strong>Age:</strong> {{ record.age }}<br>
-                <strong>NIN:</strong> {{ record.nin }}<br>
-                <strong>Crime Committed:</strong> {{ record.crime_committed }}<br>
-                <strong>Residence Before Arrest:</strong> {{ record.residence_before_arrest }}<br>
-                {% if record.image %}
-                    <img src="{{ record.image.url }}" alt="{{ record.name }}" style="width:100px;height:auto;">
-                {% endif %}
-                <a href="{% url 'criminal_record_detail' record.pk %}">View Details</a>
-            </li>
-        {% endfor %}
-    {% else %}
-        <li>No matches found.</li>
-    {% endif %}
-</ul>
+    <a href="{% url 'criminal_record_list' %}">Back to List</a>
 
-<a href="{% url 'criminal_record_list' %}">Back to List</a>
+    <script>
+        const imageSource = document.getElementById('image-source');
+        const uploadSection = document.getElementById('upload-section');
+        const cameraSection = document.getElementById('camera-section');
+        const cameraStream = document.getElementById('camera-stream');
+        const captureButton = document.getElementById('capture-button');
+        const capturedImage = document.getElementById('captured-image');
+        const matchForm = document.getElementById('match-form');
 
+        let stream;
+
+        imageSource.addEventListener('change', function() {
+            if (this.value === 'upload') {
+                uploadSection.style.display = 'block';
+                cameraSection.style.display = 'none';
+                stopCamera();
+            } else {
+                uploadSection.style.display = 'none';
+                cameraSection.style.display = 'block';
+                startCamera();
+            }
+        });
+
+        async function startCamera() {
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                cameraStream.srcObject = stream;
+            } catch (err) {
+                console.error("Error accessing the camera:", err);
+            }
+        }
+
+        function stopCamera() {
+            if (stream) {
+                stream.getTracks().forEach(track => track.stop());
+            }
+        }
+
+        captureButton.addEventListener('click', function() {
+            const context = capturedImage.getContext('2d');
+            capturedImage.width = cameraStream.videoWidth;
+            capturedImage.height = cameraStream.videoHeight;
+            context.drawImage(cameraStream, 0, 0);
+            capturedImage.toBlob(function(blob) {
+                // Here we are appending the blob to FormData
+                const formData = new FormData(matchForm);
+                formData.append('image', blob, 'captured_image.jpg');
+
+                fetch(matchForm.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                    }
+                }).then(response => response.text())
+                  .then(html => {
+                      document.body.innerHTML = html;
+                      const script = document.querySelector('script');
+                      eval(script.textContent);
+                  });
+            }, 'image/jpeg');
+        });
+
+        matchForm.addEventListener('submit', function(e) {
+            if (imageSource.value === 'camera' && capturedImage.style.display !== 'none') {
+                e.preventDefault(); // Prevent default form submission
+                capturedImage.toBlob(function(blob) {
+                    const formData = new FormData(matchForm);
+                    formData.delete('image');  // Remove the file input if it exists
+                    formData.append('image', blob, 'captured_image.jpg');
+
+                    fetch(matchForm.action, {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                        }
+                    }).then(response => response.text())
+                      .then(html => {
+                          document.body.innerHTML = html;
+                          const script = document.querySelector('script');
+                          eval(script.textContent);
+                      });
+                }, 'image/jpeg');
+            }
+        });
+    </script>
 </body>
 </html>
