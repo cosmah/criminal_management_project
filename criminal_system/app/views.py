@@ -2,18 +2,17 @@
 import os
 import base64
 from django.conf import settings
-from django.shortcuts import render
+from django.shortcuts import render, get_object_or_404
 from django.core.files.base import ContentFile
 from .models import CriminalRecord
 from .forms import ImageUploadForm
 from deepface import DeepFace
 import pandas as pd
-from django.shortcuts import render, get_object_or_404
-
 
 def citizen_match(request):
     form = ImageUploadForm()
     results = []
+    match_found = False  # Flag to indicate if a match was found
     
     if request.method == 'POST':
         form = ImageUploadForm(request.POST, request.FILES)
@@ -49,6 +48,7 @@ def citizen_match(request):
                     df = matches[0]
                     if not df.empty:
                         print("Matches found, processing results")
+                        match_found = True  # Set the flag to True if matches are found
                         for _, match in df.iterrows():
                             matched_image_path = match['identity']
                             print(f"Matched image path: {matched_image_path}")
@@ -79,9 +79,11 @@ def citizen_match(request):
                     os.remove(uploaded_image_path)
                     print(f"Uploaded image removed: {uploaded_image_path}")
 
-    return render(request, 'citizen_match.html', {'form': form, 'results': results})
-
-
+    return render(request, 'citizen_match.html', {
+        'form': form,
+        'results': results,
+        'match_found': match_found
+    })
 def criminal_record_list(request):
     records = CriminalRecord.objects.all()
     return render(request, 'criminal_record_list.html', {'records': records})
@@ -104,4 +106,3 @@ def criminal_record_search(request):
         records = CriminalRecord.objects.none()  # No results if no query is provided
     
     return render(request, 'criminal_record_search.html', {'records': records, 'query': query})
-
