@@ -279,16 +279,16 @@
             }
 
             imageSource.addEventListener('change', function () {
-            if (this.value === 'upload') {
-                uploadSection.style.display = 'block';
-                cameraSection.style.display = 'none';
-                stopCamera();
-            } else {
-                uploadSection.style.display = 'none';
-                cameraSection.style.display = 'block';
-                startCamera(currentFacingMode);
-            }
-        });
+                if (this.value === 'upload') {
+                    uploadSection.style.display = 'block';
+                    cameraSection.style.display = 'none';
+                    stopCamera();
+                } else {
+                    uploadSection.style.display = 'none';
+                    cameraSection.style.display = 'block';
+                    startCamera(currentFacingMode);
+                }
+            });
 
             async function startCamera(facingMode) {
                 try {
@@ -310,35 +310,12 @@
             }
 
             captureButton.addEventListener('click', function () {
-            const context = capturedImage.getContext('2d');
-            capturedImage.width = cameraStream.videoWidth;
-            capturedImage.height = cameraStream.videoHeight;
-            context.drawImage(cameraStream, 0, 0);
-            capturedImage.toBlob(function (blob) {
-                const formData = new FormData(matchForm);
-                formData.append('image', blob, 'captured_image.jpg');
-
-                fetch(matchForm.action, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': formData.get('csrfmiddlewaretoken')
-                    }
-                }).then(response => response.text())
-                    .then(html => {
-                        document.body.innerHTML = html;
-                        const script = document.querySelector('script');
-                        eval(script.textContent);
-                    });
-            }, 'image/jpeg');
-        });
-
-        matchForm.addEventListener('submit', function (e) {
-            if (imageSource.value === 'camera' && capturedImage.style.display !== 'none') {
-                e.preventDefault();
+                const context = capturedImage.getContext('2d');
+                capturedImage.width = cameraStream.videoWidth;
+                capturedImage.height = cameraStream.videoHeight;
+                context.drawImage(cameraStream, 0, 0);
                 capturedImage.toBlob(function (blob) {
                     const formData = new FormData(matchForm);
-                    formData.delete('image');
                     formData.append('image', blob, 'captured_image.jpg');
 
                     fetch(matchForm.action, {
@@ -349,13 +326,36 @@
                         }
                     }).then(response => response.text())
                         .then(html => {
-                            document.body.innerHTML = html;
-                            const script = document.querySelector('script');
-                            eval(script.textContent);
+                            document.open();
+                            document.write(html);
+                            document.close();
                         });
                 }, 'image/jpeg');
-            }
-        });
+            });
+
+            matchForm.addEventListener('submit', function (e) {
+                if (imageSource.value === 'camera' && capturedImage.style.display !== 'none') {
+                    e.preventDefault();
+                    capturedImage.toBlob(function (blob) {
+                        const formData = new FormData(matchForm);
+                        formData.delete('image');
+                        formData.append('image', blob, 'captured_image.jpg');
+
+                        fetch(matchForm.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+                            }
+                        }).then(response => response.text())
+                            .then(html => {
+                                document.open();
+                                document.write(html);
+                                document.close();
+                            });
+                    }, 'image/jpeg');
+                }
+            });
 
             toggleCameraButton.addEventListener('click', function () {
                 currentFacingMode = currentFacingMode === 'user' ? 'environment' : 'user';
