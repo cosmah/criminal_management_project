@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Match Criminal Records</title>
     <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
         :root {
             --primary-color: #3498db;
@@ -43,7 +44,17 @@
         }
 
         .header h1 {
-            margin-right: 20px;
+            display: flex;
+            align-items: center;
+            font-size: 24px;
+        }
+
+        .header h1 i {
+            margin-right: 10px;
+        }
+
+        .header h2 {
+            font-size: 18px;
         }
 
         .main-content {
@@ -58,6 +69,9 @@
             padding: 20px;
             border-radius: var(--border-radius);
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
         }
 
         label {
@@ -81,6 +95,13 @@
             color: white;
             cursor: pointer;
             transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        button i {
+            margin-right: 10px;
         }
 
         button:hover {
@@ -133,6 +154,12 @@
             padding: 10px 20px;
             border-radius: 4px;
             transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+
+        .btn-primary i {
+            margin-right: 10px;
         }
 
         .btn-primary:hover {
@@ -168,6 +195,22 @@
         #toggle-camera-button {
             width: auto;
             margin: 0 10px;
+        }
+
+        .spinner {
+            display: none;
+            margin-top: 20px;
+        }
+
+        .spinner i {
+            font-size: 24px;
+            color: var(--primary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         @media (max-width: 768px) {
@@ -206,15 +249,15 @@
 <body data-match-found="{{ match_found|yesno:'true,false' }}">
     <div class="container">
         <div class="header">
-            <h1>Criminal Records Matching</h1>
-            <h2>Location: <span id="user-location">Fetching location...</span></h2>
+            <h1><i class="fas fa-user-secret"></i> Criminal Records Matching</h1>
+            <h2><i class="fas fa-map-marker-alt"></i> Location: <span id="user-location">Fetching location...</span></h2>
         </div>
 
         <div class="main-content">
             <form method="post" enctype="multipart/form-data" id="match-form">
                 {% csrf_token %}
                 <div>
-                    <label for="image-source">Choose image source:</label>
+                    <label for="image-source"><i class="fas fa-image"></i> Choose image source:</label>
                     <select id="image-source" name="image_source">
                         <option value="upload">Upload Image</option>
                         <option value="camera">Use Camera</option>
@@ -228,13 +271,16 @@
                         <video id="camera-stream" autoplay></video>
                         <canvas id="face-detection-canvas"></canvas>
                     </div>
-                    <button type="button" id="toggle-camera-button">Toggle Camera</button>
+                    <button type="button" id="toggle-camera-button"><i class="fas fa-sync-alt"></i> Toggle Camera</button>
                     <canvas id="captured-image" style="display:none;"></canvas>
                 </div>
-                <button type="submit">Search</button>
+                <button type="submit"><i class="fas fa-search"></i> Search</button>
+                <div class="spinner" id="spinner">
+                    <i class="fas fa-spinner"></i>
+                </div>
             </form>
 
-            <h2>Results:</h2>
+            <h2><i class="fas fa-list"></i> Results:</h2>
             <ul class="result-list">
                 {% if results %}
                     {% for record in results %}
@@ -252,7 +298,7 @@
                                     <p>Crime: {{ record.crime_committed }}</p>
                                     <p>NIN: {{ record.nin }}</p>
                                     <div class="actions">
-                                        <a href="{% url 'criminal_record_detail' record.pk %}" class="btn-primary">View Details</a>
+                                        <a href="{% url 'criminal_record_detail' record.pk %}" class="btn-primary"><i class="fas fa-info-circle"></i> View Details</a>
                                     </div>
                                 </div>
                             </div>
@@ -278,6 +324,7 @@
             const matchForm = document.getElementById('match-form');
             const userLocation = document.getElementById('user-location');
             const faceDetectionCanvas = document.getElementById('face-detection-canvas');
+            const spinner = document.getElementById('spinner');
 
             let stream;
             let currentFacingMode = 'user'; // Default to front camera
@@ -402,6 +449,7 @@
             matchForm.addEventListener('submit', function (e) {
                 if (imageSource.value === 'camera') {
                     e.preventDefault();
+                    spinner.style.display = 'block';
                     captureImage();
                 }
             });
