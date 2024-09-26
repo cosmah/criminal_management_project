@@ -9,6 +9,19 @@ class CriminalRecord(models.Model):
     crime_committed = models.TextField()
     residence_before_arrest = models.CharField(max_length=255)
     image = models.ImageField(upload_to='criminal_images/')  # Ensure Pillow is installed
+    STATUS_CHOICES = [
+        ('WANTED', 'Wanted'),
+        ('ON_BAIL', 'On Bail'),
+        ('SERVING_SENTENCE', 'Serving Sentence'),
+        ('COMPLETED_SENTENCE', 'Completed Sentence'),
+    ]
+
+    status = models.CharField(
+        max_length=50,
+        choices=STATUS_CHOICES,
+        default='WANTED'
+    )
+
 
     def __str__(self):
         return self.name
