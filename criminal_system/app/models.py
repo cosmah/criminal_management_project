@@ -1,6 +1,6 @@
 # app/models.py
-
 from django.db import models
+from django.utils import timezone
 
 class CriminalRecord(models.Model):
     name = models.CharField(max_length=100)
@@ -12,3 +12,12 @@ class CriminalRecord(models.Model):
 
     def __str__(self):
         return self.name
+
+class MatchRecord(models.Model):
+    criminal_record = models.ForeignKey(CriminalRecord, on_delete=models.CASCADE)
+    matched_at = models.DateTimeField(default=timezone.now)
+    location = models.CharField(max_length=255, blank=True, null=True)
+    matched_image = models.ImageField(upload_to='matched_images/')
+
+    def __str__(self):
+        return f"Match for {self.criminal_record.name} at {self.matched_at}"

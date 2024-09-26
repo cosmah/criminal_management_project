@@ -274,6 +274,7 @@
                     <button type="button" id="toggle-camera-button"><i class="fas fa-sync-alt"></i> Toggle Camera</button>
                     <canvas id="captured-image" style="display:none;"></canvas>
                 </div>
+                <input type="hidden" name="location" id="location-input">
                 <button type="submit"><i class="fas fa-search"></i> Search</button>
                 <div class="spinner" id="spinner">
                     <i class="fas fa-spinner"></i>
@@ -474,7 +475,9 @@
                         );
 
                         const { latitude, longitude } = position.coords;
-                        userLocation.textContent = `Lat: ${latitude.toFixed(2)}, Long: ${longitude.toFixed(2)}`;
+                        const locationString = `Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`;
+                        userLocation.textContent = locationString;
+                        document.getElementById('location-input').value = locationString;
                     } catch (error) {
                         console.error("Error getting location:", error);
                         userLocation.textContent = 'Unable to retrieve location. Click to try again.';

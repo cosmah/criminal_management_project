@@ -4,7 +4,7 @@ import base64
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.core.files.base import ContentFile
-from .models import CriminalRecord
+from .models import CriminalRecord, MatchRecord
 from .forms import ImageUploadForm
 from deepface import DeepFace
 import pandas as pd
@@ -62,6 +62,19 @@ def citizen_match(request):
                             if record:
                                 results.append(record)
                                 print(f"Record found: {record}")
+                                
+                                # Create a MatchRecord
+                                match_record = MatchRecord(
+                                    criminal_record=record,
+                                    location=request.POST.get('location', '')  # You'll need to send this from the frontend
+                                )
+                                match_record.matched_image.save(
+                                    f"match_{record.id}_{match_record.matched_at.strftime('%Y%m%d%H%M%S')}.jpg",
+                                    ContentFile(image.read()),
+                                    save=True
+                                )
+                                match_record.save()
+                                print(f"Match record created: {match_record}")
                             else:
                                 print(f"No record found for matched image path: {relative_path}")
                     else:
@@ -84,6 +97,7 @@ def citizen_match(request):
         'results': results,
         'match_found': match_found
     })
+
 def criminal_record_list(request):
     records = CriminalRecord.objects.all()
     return render(request, 'criminal_record_list.html', {'records': records})
