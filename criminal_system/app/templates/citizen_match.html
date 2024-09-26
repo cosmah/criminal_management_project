@@ -326,6 +326,7 @@
             const userLocation = document.getElementById('user-location');
             const faceDetectionCanvas = document.getElementById('face-detection-canvas');
             const spinner = document.getElementById('spinner');
+            const locationInput = document.getElementById('location-input');
 
             let stream;
             let currentFacingMode = 'user'; // Default to front camera
@@ -452,6 +453,8 @@
                     e.preventDefault();
                     spinner.style.display = 'block';
                     captureImage();
+                } else {
+                    console.log("Location before form submission:", locationInput.value);
                 }
             });
 
@@ -477,7 +480,8 @@
                         const { latitude, longitude } = position.coords;
                         const locationString = `Lat: ${latitude.toFixed(6)}, Long: ${longitude.toFixed(6)}`;
                         userLocation.textContent = locationString;
-                        document.getElementById('location-input').value = locationString;
+                        locationInput.value = locationString;
+                        console.log("Location set:", locationString);
                     } catch (error) {
                         console.error("Error getting location:", error);
                         userLocation.textContent = 'Unable to retrieve location. Click to try again.';

@@ -64,9 +64,12 @@ def citizen_match(request):
                                 print(f"Record found: {record}")
                                 
                                 # Create a MatchRecord
+                                location = request.POST.get('location', '')
+                                print(f"Location received: {location}")
+                                
                                 match_record = MatchRecord(
                                     criminal_record=record,
-                                    location=request.POST.get('location', '')  # You'll need to send this from the frontend
+                                    location=location  # You'll need to send this from the frontend
                                 )
                                 match_record.matched_image.save(
                                     f"match_{record.id}_{match_record.matched_at.strftime('%Y%m%d%H%M%S')}.jpg",
@@ -110,11 +113,11 @@ def criminal_record_search(request):
     query = request.GET.get('q')
     if query:
         records = CriminalRecord.objects.filter(
-            name__icontains=query
+            name__icontains(query)
         ) | CriminalRecord.objects.filter(
-            crime_committed__icontains=query
+            crime_committed__icontains(query)
         ) | CriminalRecord.objects.filter(
-            nin__icontains=query
+            nin__icontains(query)
         )
     else:
         records = CriminalRecord.objects.none()  # No results if no query is provided
