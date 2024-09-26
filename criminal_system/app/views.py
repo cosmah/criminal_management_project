@@ -4,10 +4,13 @@ import base64
 from django.conf import settings
 from django.shortcuts import render, get_object_or_404
 from django.core.files.base import ContentFile
-from .models import CriminalRecord
+from django.utils import timezone  # Import timezone
+from .models import CriminalRecord, MatchRecord
 from .forms import ImageUploadForm
 from deepface import DeepFace
 import pandas as pd
+from PIL import Image
+from io import BytesIO
 
 def citizen_match(request):
     form = ImageUploadForm()
@@ -62,13 +65,35 @@ def citizen_match(request):
                             if record:
                                 results.append(record)
                                 print(f"Record found: {record}")
+                                
+                                # Convert the image to JPEG format
+                                image_file = Image.open(image)
+                                image_io = BytesIO()
+                                image_file.save(image_io, format='JPEG')
+                                image_content = ContentFile(image_io.getvalue(), name=f"match_{record.id}_{timezone.now().strftime('%Y%m%d%H%M%S')}.jpg")
+                                
+                                # Create a MatchRecord
+                                location = request.POST.get('location', '')
+                                print(f"Location received: {location}")
+                                
+                                match_record = MatchRecord(
+                                    criminal_record=record,
+                                    location=location
+                                )
+                                match_record.matched_image.save(
+                                    f"match_{record.id}_{timezone.now().strftime('%Y%m%d%H%M%S')}.jpg",
+                                    image_content,
+                                    save=True
+                                )
+                                match_record.save()
+                                print(f"Match record created: {match_record}")
                             else:
                                 print(f"No record found for matched image path: {relative_path}")
                     else:
                         print("DataFrame is empty, no matches found")
                 else:
                     print("No matches found by DeepFace or unexpected return format")
-            
+
             except Exception as e:
                 print(f"Error during facial recognition: {str(e)}")
                 import traceback
@@ -84,6 +109,7 @@ def citizen_match(request):
         'results': results,
         'match_found': match_found
     })
+
 def criminal_record_list(request):
     records = CriminalRecord.objects.all()
     return render(request, 'criminal_record_list.html', {'records': records})
@@ -96,11 +122,11 @@ def criminal_record_search(request):
     query = request.GET.get('q')
     if query:
         records = CriminalRecord.objects.filter(
-            name__icontains=query
+            name__icontains(query)
         ) | CriminalRecord.objects.filter(
-            crime_committed__icontains=query
+            crime_committed__icontains(query)
         ) | CriminalRecord.objects.filter(
-            nin__icontains=query
+            nin__icontains(query)
         )
     else:
         records = CriminalRecord.objects.none()  # No results if no query is provided
