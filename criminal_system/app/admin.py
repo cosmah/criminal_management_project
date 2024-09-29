@@ -5,7 +5,7 @@ from .models import CriminalRecord, MatchRecord
 
 @admin.register(CriminalRecord)
 class CriminalRecordAdmin(admin.ModelAdmin):
-    list_display = ('name', 'age', 'nin', 'crime_committed', 'residence_before_arrest', 'image_tag')
+    list_display = ('name', 'age', 'nin', 'crime_committed', 'residence_before_arrest','arrest_date', 'image_tag','prison_of_escape', 'status')
     search_fields = ('name', 'nin', 'crime_committed')
 
     def image_tag(self, obj):

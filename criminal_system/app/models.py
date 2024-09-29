@@ -9,6 +9,8 @@ class CriminalRecord(models.Model):
     crime_committed = models.TextField()
     residence_before_arrest = models.CharField(max_length=255)
     image = models.ImageField(upload_to='criminal_images/')  # Ensure Pillow is installed
+    prison_of_escape = models.CharField(max_length=255)
+    arrest_date = models.DateTimeField(default=timezone.now)
     STATUS_CHOICES = [
         ('WANTED', 'Wanted'),
         ('ON_BAIL', 'On Bail'),
